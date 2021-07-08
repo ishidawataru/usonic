@@ -347,6 +347,57 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+    name: usonic-lldpd
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: usonic
+            usonic: lldpd
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                app: usonic
+                usonic: lldpd
+        spec:
+            hostNetwork: true
+            serviceAccountName: usonic
+            dnsPolicy: ClusterFirstWithHostNet
+            initContainers:
+            - name: wait-core
+              image: docker.io/bitnami/kubectl:latest
+              imagePullPolicy: IfNotPresent
+              command: ['kubectl', 'wait', '--for=condition=available', 'deploy/usonic-port', '--timeout=5m']
+            containers:
+            - name: lldpmgrd
+              image: ghcr.io/microsonic/usonic-debug:201904
+              imagePullPolicy: IfNotPresent
+              command: ['lldpmgrd']
+              volumeMounts:
+              - name: redis-sock
+                mountPath: /var/run/redis/redis.sock
+              - name: sonic-db-config
+                mountPath: /var/run/redis/sonic-db/
+              securityContext:
+                privileged: true
+                capabilities:
+                    add: ["NET_ADMIN"]
+            volumes:
+            - name: redis-sock
+              hostPath:
+                  path: /var/lib/usonic/redis/redis.sock
+                  type: Socket
+            - name: sonic-db-config
+              configMap:
+                  name: sonic-db-config
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
     name: usonic-mgrd
 spec:
     replicas: 1
