@@ -27,6 +27,7 @@ jobs:
         - run: git submodule update --init --recursive sm/sonic-py-swsssdk sm/sonic-sairedis sm/sonic-swss sm/sonic-swss-common sm/sonic-utilities
         - run: git submodule update --init sm/sonic-buildimage
         - run: cd sm/libteam && make all
+        - run: cd src/lldpd && make all
         - name: Cache Docker layers
           uses: actions/cache@v2
           with:
@@ -71,6 +72,19 @@ jobs:
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache
             push: true
+        - name: Build usonic-lldpd
+          uses: docker/build-push-action@v2
+          with:
+            context: ./
+            file: ./docker/build-lldpd.Dockerfile
+            builder: ${{ steps.buildx.outputs.name }}
+            tags: ghcr.io/microsonic/usonic-lldpd:${{ env.DOCKER_IMAGE_TAG }}
+            build-args: |
+              USONIC_SWSS_COMMON_IMAGE=ghcr.io/microsonic/usonic-swss-common:${{ env.DOCKER_IMAGE_TAG }}
+              USONIC_SAIREDIS_IMAGE=ghcr.io/microsonic/usonic-sairedis:${{ env.DOCKER_IMAGE_TAG }}
+            cache-from: type=local,src=/tmp/.buildx-cache
+            cache-to: type=local,dest=/tmp/.buildx-cache
+            push: true
         - name: Build usonic-swss
           uses: docker/build-push-action@v2
           with:
@@ -82,6 +96,7 @@ jobs:
               USONIC_SWSS_COMMON_IMAGE=ghcr.io/microsonic/usonic-swss-common:${{ env.DOCKER_IMAGE_TAG }}
               USONIC_SAIREDIS_IMAGE=ghcr.io/microsonic/usonic-sairedis:${{ env.DOCKER_IMAGE_TAG }}
               USONIC_LIBTEAM_IMAGE=ghcr.io/microsonic/usonic-libteam:${{ env.DOCKER_IMAGE_TAG }}
+              USONIC_LLDPD_IMAGE=ghcr.io/microsonic/usonic-lldpd:${{ env.DOCKER_IMAGE_TAG }}
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache
             push: true
@@ -97,6 +112,7 @@ jobs:
               USONIC_SAIREDIS_IMAGE=ghcr.io/microsonic/usonic-sairedis:${{ env.DOCKER_IMAGE_TAG }}
               USONIC_SWSS_IMAGE=ghcr.io/microsonic/usonic-swss:${{ env.DOCKER_IMAGE_TAG }}
               USONIC_LIBTEAM_IMAGE=ghcr.io/microsonic/usonic-libteam:${{ env.DOCKER_IMAGE_TAG }}
+              USONIC_LLDPD_IMAGE=ghcr.io/microsonic/usonic-lldpd:${{ env.DOCKER_IMAGE_TAG }}
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache
             push: true
@@ -112,6 +128,7 @@ jobs:
               USONIC_SAIREDIS_IMAGE=ghcr.io/microsonic/usonic-sairedis:${{ env.DOCKER_IMAGE_TAG }}
               USONIC_SWSS_IMAGE=ghcr.io/microsonic/usonic-swss:${{ env.DOCKER_IMAGE_TAG }}
               USONIC_LIBTEAM_IMAGE=ghcr.io/microsonic/usonic-libteam:${{ env.DOCKER_IMAGE_TAG }}
+              USONIC_LLDPD_IMAGE=ghcr.io/microsonic/usonic-lldpd:${{ env.DOCKER_IMAGE_TAG }}
               USONIC_RUN_IMAGE=ghcr.io/microsonic/usonic:${{ env.DOCKER_IMAGE_TAG }}
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache
